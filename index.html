@@ -1,146 +1,51 @@
 <!doctype html>
 <html lang="zh-Hant">
+<head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>翻翻牌｜動物記憶配對</title>
-<style>
-* { box-sizing: border-box }
-body { margin: 0; color: #fff1dc; background: radial-gradient(ellipse at top, #473264, #19152c 70%); min-height: 100vh; font: 1rem system-ui, sans-serif }
-main { width: min(94%, 550px); margin: auto; text-align: center; padding: 32px 0 }
-h1 { margin: 0; color: #ffe299; font-size: clamp(3rem, 11vw, 5rem); letter-spacing: .1em }
-p { margin: 10px 0 20px }
-button { font: inherit; color: inherit; background: #3d2a55; border: 1px solid #9a78ac; border-radius: 12px; padding: 8px 13px; cursor: pointer }
-button:focus-visible { outline: 3px solid #ffe299; outline-offset: 3px }
-[aria-pressed="true"] { background: #ffdf92; color: #30213c; font-weight: bold }
-.controls, .stats { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px }
-.stats { margin: 16px 0 12px }
-.stats span { background: #241b39; padding: 7px 10px; border-radius: 9px; font-variant-numeric: tabular-nums }
-#board { display: grid; grid-template-columns: repeat(var(--columns), minmax(0, 1fr)); gap: clamp(6px, 1.5vw, 12px) }
-.card { position: relative; display: grid; place-items: center; aspect-ratio: 1.2; padding: 0; background: linear-gradient(145deg, #67458a, #39264f); font-size: clamp(1.25rem, 5vw, 2.65rem); color: #efc8ff; box-shadow: 0 3px #130f22 }
-.card::after { content: ""; position: absolute; inset: 8%; border: 1px dashed #c294d8; border-radius: 8px; pointer-events: none }
-.card.open { background: #fff0d5 }
-.card.matched { background: #bbebcb }
-.card.open::after, .card.matched::after { display: none }
-#message { min-height: 1.5em; color: #ffe299 }
-</style>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>旅行的記憶</title>
+<link rel="stylesheet" href="style.css?v=compact-panels">
+<script src="card-art.js?v=individual-cards" defer></script><script src="game.js?v=release" defer></script>
+</head>
+<body>
+<div class="scenery" aria-hidden="true"><div class="scene-art"><div class="thai-market" aria-hidden="true"></div></div><div id="scene-effects"></div><div class="sun"></div><div class="hill hill-one"></div><div class="hill hill-two"></div><div class="landmark" id="landmark"></div></div>
 <main>
-  <h1>翻翻牌</h1>
-  <p>每次翻開兩張牌，找出所有相同的動物。</p>
-  <div class="controls">
-    <button data-pairs="6" aria-pressed="false">簡單</button>
-    <button data-pairs="8" aria-pressed="true">普通</button>
-    <button data-pairs="12" aria-pressed="false">困難</button>
-    <button id="reset">重新洗牌</button>
-  </div>
-  <div class="stats">
-    <span>配對 <strong id="score"></strong></span>
-    <span>嘗試 <strong id="moves"></strong></span>
-    <span>時間 <strong id="time"></strong></span>
-  </div>
-  <section id="board" aria-label="記憶配對牌面"></section>
-  <p id="message" role="status"></p>
+<header><span class="brand">✦ 旅行的記憶</span><button id="music" type="button" aria-pressed="false">♫ 音樂關閉</button></header>
+<nav id="route" aria-label="旅行路線"></nav>
+<section id="intro" class="ticket">
+<div id="suitcase" class="suitcase" role="img" aria-label="行李箱內的七站島嶼地圖"></div><div id="arrival" class="arrival"><div class="postcard" aria-hidden="true"><div class="scene-art"><div class="thai-market" aria-hidden="true"></div></div></div><p class="eyebrow" id="eyebrow"></p>
+<h1 id="title"></h1>
+<p id="description"></p>
+<button id="start" class="primary"></button>
+</div>
+</section>
+<section id="play" hidden aria-label="翻牌遊戲">
+<div class="dashboard"><h1 id="destination"></h1><span id="pairs"></span><span id="timer" role="timer"></span></div>
+<div id="board" class="board" aria-label="卡片區"></div>
+<p id="feedback" role="status"></p>
+</section>
 </main>
-<script>
-const animals = [
-  ['🦊','狐狸'], ['🐼','熊貓'], ['🐸','青蛙'], ['🐱','貓咪'],
-  ['🐙','章魚'], ['🦋','蝴蝶'], ['🐢','烏龜'], ['🐧','企鵝'],
-  ['🐝','蜜蜂'], ['🦉','貓頭鷹'], ['🐬','海豚'], ['🐨','無尾熊']
-];
-const get = id => document.getElementById(id);
-const board = get('board'), score = get('score'), moves = get('moves');
-const time = get('time'), message = get('message');
-const levels = [...document.querySelectorAll('[data-pairs]')];
-let pairs = 8;
-let first, pending, start, timer, attempts, matched;
-
-function updateClock() {
-  const seconds = start === null ? 0 : Math.floor((performance.now() - start) / 1000);
-  time.textContent = [Math.floor(seconds / 60), seconds % 60]
-    .map(part => String(part).padStart(2, '0')).join(':');
-}
-
-function show(card, state = '') {
-  card.state = state;
-  card.button.className = 'card ' + state;
-  card.button.textContent = state ? card.icon : '✦';
-  const description = state === 'matched' ? card.name + '，已配對' : state ? card.name : '未翻開';
-  card.button.setAttribute('aria-label', '第 ' + card.number + ' 張牌，' + description);
-  card.button.setAttribute('aria-disabled', String(Boolean(state)));
-}
-
-function flip(card) {
-  if (pending !== null || card.state) return;
-  if (start === null) {
-    start = performance.now();
-    timer = setInterval(updateClock, 250);
-  }
-  show(card, 'open');
-  if (!first) {
-    first = card;
-    message.textContent = '翻開了' + card.name + '，再翻一張。';
-    return;
-  }
-  const previous = first;
-  first = null;
-  moves.textContent = ++attempts;
-  if (previous.name === card.name) {
-    show(previous, 'matched');
-    show(card, 'matched');
-    score.textContent = ++matched + ' / ' + pairs;
-    message.textContent = '找到一對' + card.name + '！';
-    if (matched === pairs) {
-      clearInterval(timer);
-      updateClock();
-      message.textContent = '全部配對成功！共嘗試 ' + attempts + ' 次，耗時 ' + time.textContent + '。';
-    }
-    return;
-  }
-  message.textContent = previous.name + '和' + card.name + '沒有配對。';
-  pending = setTimeout(() => {
-    show(previous);
-    show(card);
-    pending = null;
-  }, 850);
-}
-
-function reset() {
-  clearTimeout(pending);
-  clearInterval(timer);
-  first = pending = start = null;
-  attempts = matched = 0;
-  score.textContent = '0 / ' + pairs;
-  moves.textContent = '0';
-  message.textContent = '';
-  updateClock();
-  board.style.setProperty('--columns', pairs === 12 ? 6 : 4);
-  const selected = animals.slice(0, pairs);
-  const deck = [...selected, ...selected];
-  for (let index = deck.length - 1; index > 0; index--) {
-    const swap = Math.floor(Math.random() * (index + 1));
-    [deck[index], deck[swap]] = [deck[swap], deck[index]];
-  }
-  board.replaceChildren(...deck.map(([icon, name], index) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    const card = { button, icon, name, number: index + 1 };
-    show(card);
-    button.addEventListener('click', () => flip(card));
-    return button;
-  }));
-}
-
-for (const level of levels) {
-  level.addEventListener('click', () => {
-    pairs = Number(level.dataset.pairs);
-    for (const option of levels) option.setAttribute('aria-pressed', String(option === level));
-    reset();
-    message.textContent = level.textContent + '難度已就緒。';
-  });
-}
-get('reset').addEventListener('click', () => {
-  reset();
-  message.textContent = '已重新洗牌。';
-});
-reset();
-</script>
+</body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
