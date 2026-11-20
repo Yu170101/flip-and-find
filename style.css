@@ -405,7 +405,7 @@ body:has(#play:not([hidden])) .stop:not([aria-current]){background:#e5e0d1e8}
   background:#b8d8cb url("scenes/map-ocean.png") center / 100% 100% no-repeat;
 }
 
-main{--welcome-panel:min(100%,380px)}
+main{position:relative;--welcome-panel:min(100%,380px)}
 main header{
   position:relative;
   display:grid;
@@ -413,24 +413,23 @@ main header{
   width:var(--welcome-panel);
   min-height:54px;
   margin-inline:auto;
-  padding:8px 94px;
+  padding:8px 12px;
   background:#fff9edeb;
 }
 header .brand{text-align:center;line-height:1.25}
-header #music{
+main > #music{
   position:absolute;
-  right:8px;
-  top:50%;
-  translate:0 -50%;
+  right:0;
+  top:25px;
   padding:6px 8px;
   font-size:.8rem;
   white-space:nowrap;
   box-shadow:0 3px 0 #36554a52,0 5px 11px #18324745;
 }
-header #music:active{translate:0 calc(-50% + 2px);box-shadow:0 1px 2px #18324745}
-@media(max-width:380px){
-  main header{padding-inline:82px}
-  header .brand{font-size:1rem}
+main > #music:active{translate:0 2px;box-shadow:0 1px 2px #18324745}
+@media(max-width:620px){
+  main{padding-top:60px}
+  main > #music{top:18px}
 }
 .suitcase .island small{
   border:1px solid #6486a3;
@@ -439,3 +438,4 @@ header #music:active{translate:0 calc(-50% + 2px);box-shadow:0 1px 2px #18324745
   padding:2px 7px;
 }
 .suitcase .island.current small{border-color:#a75944}
+
