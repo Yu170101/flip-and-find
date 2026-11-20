@@ -146,7 +146,7 @@ main:has(.ticket[data-phase=welcome]:not([hidden])) nav{visibility:hidden}
   background-color:#102a37;
 }
 .ticket[data-phase=welcome]{
-  width:min(100%,380px);
+  width:var(--welcome-panel);
   padding:clamp(21px,5vw,30px) clamp(16px,5vw,28px);
   border-radius:19px;
 }
@@ -405,27 +405,30 @@ body:has(#play:not([hidden])) .stop:not([aria-current]){background:#e5e0d1e8}
   background:#b8d8cb url("scenes/map-ocean.png") center / 100% 100% no-repeat;
 }
 
-main{--wide-panel:min(100%,590px)}
+main{--welcome-panel:min(100%,380px)}
 main header{
   position:relative;
   display:grid;
-  justify-content:stretch;
-  padding:0;
-  border:0;
-  background:none;
-  box-shadow:none;
-}
-header .brand,.ticket[data-phase=expired]{width:var(--wide-panel)}
-header .brand{
-  justify-self:center;
-  padding:10px 12px;
-  text-align:center;
+  place-items:center;
+  width:var(--welcome-panel);
+  min-height:54px;
+  margin-inline:auto;
+  padding:8px 94px;
   background:#fff9edeb;
-  border:1px solid #2f594b;
-  border-radius:18px;
-  box-shadow:0 4px 14px #122f3e35;
 }
-header #music{position:absolute;right:0;top:0;white-space:nowrap}
-@media(max-width:844px){
-  main header{padding-top:42px}
+header .brand{text-align:center;line-height:1.25}
+header #music{
+  position:absolute;
+  right:8px;
+  top:50%;
+  translate:0 -50%;
+  padding:6px 8px;
+  font-size:.8rem;
+  white-space:nowrap;
+  box-shadow:0 3px 0 #36554a52,0 5px 11px #18324745;
+}
+header #music:active{translate:0 calc(-50% + 2px);box-shadow:0 1px 2px #18324745}
+@media(max-width:380px){
+  main header{padding-inline:82px}
+  header .brand{font-size:1rem}
 }
