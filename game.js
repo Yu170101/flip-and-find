@@ -314,9 +314,11 @@ $('start').addEventListener('click', () => {
     previousIsland = -1;
     showScreen('boarding');
   } else startLevel();
+  if (musicEnabled && !audio) startMusic();
 });
 
 
+let musicEnabled = true;
 let audio;
 let bus;
 let melody;
@@ -444,36 +446,34 @@ function refreshMusic() {
   schedule();
   melody = setInterval(schedule, 180);
 }
-$('music').addEventListener('click', async () => {
-  const button = $('music');
-  if (audio) {
-    const context = audio;
-    stopMusic();
-    audio = undefined;
-    await context.close().catch(() => {});
-    if (!audio) {
-      button.setAttribute('aria-pressed','false');
-      button.textContent = '♫ 音樂關閉';
-    }
-    return;
-  }
+async function startMusic() {
   const Audio = window.AudioContext || window.webkitAudioContext;
   let context;
   try {
     context = new Audio();
     audio = context;
     await context.resume();
-    if (audio !== context) return;
-    refreshMusic();
-    button.setAttribute('aria-pressed','true');
-    button.textContent = '♫ 音樂開啟';
+    if (audio === context && musicEnabled) refreshMusic();
   } catch {
     if (audio !== context) return;
     stopMusic();
     audio = undefined;
     if (context) context.close().catch(() => {});
-    button.setAttribute('aria-pressed','false');
-    button.textContent = '♫ 無法播放';
+  }
+}
+
+$('music').addEventListener('click', () => {
+  musicEnabled = !musicEnabled;
+  const button = $('music');
+  button.setAttribute('aria-pressed', String(musicEnabled));
+  button.textContent = musicEnabled ? '♫ 音樂開啟' : '♫ 音樂關閉';
+  if (musicEnabled) {
+    startMusic();
+  } else if (audio) {
+    const context = audio;
+    stopMusic();
+    audio = undefined;
+    context.close().catch(() => {});
   }
 });
 $('arrival').addEventListener('keydown', event => {
@@ -483,6 +483,7 @@ $('arrival').addEventListener('keydown', event => {
   }
 });
 showScreen('welcome');
+
 
 
 
