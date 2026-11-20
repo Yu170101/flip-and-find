@@ -280,7 +280,6 @@ body:has(#play:not([hidden])) .stop:not([aria-current]){background:#e5e0d1;color
 @keyframes snack-fall{0%{transform:translate(0,0) rotate(-14deg)}16%,80%{opacity:1}100%{transform:translate(-5vw,112vh) rotate(22deg)}}
 @media(prefers-reduced-motion:reduce){#scene-effects{display:none}}
 #scene-effects .steam-cup{position:absolute;width:30px;bottom:0;left:calc(50% - 15px);mix-blend-mode:multiply}
-body:has(#play:not([hidden])) header{background:#e5e0d1}
 
 #scene-effects .boat{width:clamp(52px,9vw,105px);aspect-ratio:1;left:-115px;background:url("scenes/thai-boat.png") center / contain no-repeat;animation-duration:15s}
 #scene-effects .boat:nth-child(even){left:auto;right:-115px}
@@ -400,3 +399,33 @@ body:has(#play:not([hidden])) .stop:not([aria-current]){background:#e5e0d1e8}
 }
 #play #feedback:empty{display:none}
 
+.ticket[data-phase=boarding] .suitcase{
+  height:auto;
+  aspect-ratio:955 / 700;
+  background:#b8d8cb url("scenes/map-ocean.png") center / 100% 100% no-repeat;
+}
+
+main{--wide-panel:min(100%,590px)}
+main header{
+  position:relative;
+  display:grid;
+  justify-content:stretch;
+  padding:0;
+  border:0;
+  background:none;
+  box-shadow:none;
+}
+header .brand,.ticket[data-phase=expired]{width:var(--wide-panel)}
+header .brand{
+  justify-self:center;
+  padding:10px 12px;
+  text-align:center;
+  background:#fff9edeb;
+  border:1px solid #2f594b;
+  border-radius:18px;
+  box-shadow:0 4px 14px #122f3e35;
+}
+header #music{position:absolute;right:0;top:0;white-space:nowrap}
+@media(max-width:844px){
+  main header{padding-top:42px}
+}
